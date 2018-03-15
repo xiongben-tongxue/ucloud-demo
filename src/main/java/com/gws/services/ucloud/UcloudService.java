@@ -1,7 +1,5 @@
 package com.gws.services.ucloud;
 
-import com.gws.dto.ucloud.UploadSignature;
-import com.gws.enums.ucloud.FileTypeEnum;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -11,6 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface UcloudService {
 
-    String upload(MultipartFile file);
+    String upload(MultipartFile file, String bucket);
 
 }

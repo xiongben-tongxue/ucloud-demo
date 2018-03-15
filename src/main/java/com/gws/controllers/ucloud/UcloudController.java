@@ -20,9 +20,9 @@ public class UcloudController extends BaseController {
     private UcloudService ucloudService;
 
     @RequestMapping("uploadFile")
-    public JsonResult uploadFile(@RequestParam("file") MultipartFile file){
+    public JsonResult uploadFile(@RequestParam("file") MultipartFile file,String bucket){
 
-        String result = ucloudService.upload(file);
+        String result = ucloudService.upload(file, bucket);
 
         return success(result);
     }

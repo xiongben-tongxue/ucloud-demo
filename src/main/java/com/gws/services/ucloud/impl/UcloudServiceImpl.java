@@ -2,12 +2,9 @@ package com.gws.services.ucloud.impl;
 
 import cn.ucloud.ufile.*;
 import cn.ucloud.ufile.sender.PutSender;
-import com.gws.dto.ucloud.UploadSignature;
-import com.gws.enums.ucloud.FileTypeEnum;
 import com.gws.services.ucloud.UcloudService;
 import com.gws.utils.GwsLogger;
 import org.apache.http.Header;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
@@ -15,7 +12,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,20 +36,24 @@ public class UcloudServiceImpl implements UcloudService {
     @Value("${ucloud.proxySuffix}")
     private String proxySuffix;
 
-    @Value("${ucloud.bucket}")
-    private String bucket;
+    @Value("${ucloud.cdn.https.host}")
+    private String cdnHttpsHost;
+
+    private String http = "http://";
 
 
     private static HmacSHA1 hmacSHA1 = new HmacSHA1();
 
-
-    @Override
-    public String upload(MultipartFile file) {
-
+    @PostConstruct
+    public void init() {
         UFileConfig.getInstance().setUcloudPublicKey(ucloudPublicKey);
         UFileConfig.getInstance().setUcloudPrivateKey(ucloudPrivateKey);
         UFileConfig.getInstance().setProxySuffix(proxySuffix);
         UFileConfig.getInstance().setDownloadProxySuffix(proxySuffix);
+    }
+
+    @Override
+    public String upload(MultipartFile file, String bucket) {
 
         if (file.isEmpty()) {
             return null;
@@ -63,8 +63,6 @@ public class UcloudServiceImpl implements UcloudService {
 
         String fileName = file.getOriginalFilename();
         String postfix = getPostfix(fileName);
-        String filePath = "/Users/wangdong/Pictures/InternetPicture/" + fileName;
-
 
         if (!StringUtils.isEmpty(postfix)) {
             key.append(postfix).append("/");
@@ -77,7 +75,13 @@ public class UcloudServiceImpl implements UcloudService {
         UFileRequest request = new UFileRequest();
         request.setBucketName(bucket);
         request.setKey(key.toString());
-        request.setFilePath(filePath);
+
+        try {
+            request.setInputStream(file.getInputStream());
+            request.setContentLength(file.getSize());
+        } catch (Exception e) {
+            GwsLogger.error(e, "upload error");
+        }
 
 
         UFileClient ufileClient = null;
@@ -85,11 +89,16 @@ public class UcloudServiceImpl implements UcloudService {
         try {
             ufileClient = new UFileClient();
             putFile(ufileClient, request);
+
         } finally {
             ufileClient.shutdown();
         }
 
-        return null;
+        StringBuffer stringBuffer = new StringBuffer();
+
+        StringBuffer downCdnHttpsHost = stringBuffer.append(http).append(bucket).append(cdnHttpsHost);
+
+        return new StringBuffer().append(downCdnHttpsHost).append("/").append(key).toString();
     }
 
     private static void putFile(UFileClient ufileClient, UFileRequest request) {
