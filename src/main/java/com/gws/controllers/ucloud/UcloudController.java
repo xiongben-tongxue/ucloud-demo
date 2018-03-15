@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
  * ucloud的处理文件的接口
  */
@@ -19,10 +21,30 @@ public class UcloudController extends BaseController {
     @Autowired
     private UcloudService ucloudService;
 
+    /**
+     * 单文件上传
+     * @param file
+     * @param bucket
+     * @return
+     */
     @RequestMapping("uploadFile")
     public JsonResult uploadFile(@RequestParam("file") MultipartFile file,String bucket){
 
-        String result = ucloudService.upload(file, bucket);
+        String result = ucloudService.uploadFile(file, bucket);
+
+        return success(result);
+    }
+
+    /**
+     * 多文件上传
+     * @param files
+     * @param bucket
+     * @return
+     */
+    @RequestMapping("uploadFiles")
+    public JsonResult uploadFiles(@RequestParam("files") MultipartFile[] files,String bucket){
+
+        List<String> result = ucloudService.uploadFiles(files, bucket);
 
         return success(result);
     }

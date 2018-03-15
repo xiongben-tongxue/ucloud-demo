@@ -8,6 +8,7 @@ import org.apache.http.Header;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -53,7 +57,7 @@ public class UcloudServiceImpl implements UcloudService {
     }
 
     @Override
-    public String upload(MultipartFile file, String bucket) {
+    public String uploadFile(MultipartFile file, String bucket) {
 
         if (file.isEmpty()) {
             return null;
@@ -99,6 +103,25 @@ public class UcloudServiceImpl implements UcloudService {
         StringBuffer downCdnHttpsHost = stringBuffer.append(http).append(bucket).append(cdnHttpsHost);
 
         return new StringBuffer().append(downCdnHttpsHost).append("/").append(key).toString();
+    }
+
+    /**
+     * 上传多个文件
+     *
+     * @param files
+     * @param bucket
+     * @return
+     */
+    @Override
+    public List<String> uploadFiles(MultipartFile[] files, String bucket) {
+
+        List<String> result = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            String download = uploadFile(file,bucket);
+            result.add(download);
+        }
+        return CollectionUtils.isEmpty(result) ? Collections.EMPTY_LIST : result;
     }
 
     private static void putFile(UFileClient ufileClient, UFileRequest request) {
