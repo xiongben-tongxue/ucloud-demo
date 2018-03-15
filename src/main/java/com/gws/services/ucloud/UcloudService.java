@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * 【功能描述】
  *
- * @author yangjh  31/07/2017.
+ * @author wangdong
  */
 public interface UcloudService {
 
